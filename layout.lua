@@ -77,8 +77,12 @@ local OverrideUpdateHealth = function(self, event, bar, unit, min, max)
 	bar:SetStatusBarColor(color.r, color.g, color.b)
 	bar.bg:SetVertexColor(color.r * .5, color.g * .5, color.b * .5)
 
-	color = UnitReactionColor[UnitReaction(unit, 'player')] or gray
-	self:SetBackdropBorderColor(color.r, color.g, color.b)
+	if(UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) or not UnitIsConnected(unit)) then
+		self:SetBackdropBorderColor(.3, .3, .3)
+	else
+		color = UnitReactionColor[UnitReaction(unit, 'player')] or gray
+		self:SetBackdropBorderColor(color.r, color.g, color.b)
+	end
 
 	if(UnitIsDead(unit)) then
 		bar:SetValue(0)
