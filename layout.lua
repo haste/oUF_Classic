@@ -218,10 +218,10 @@ local func = function(settings, self, unit)
 		-- Buffs
 		local buffs = CreateFrame("Frame", nil, self)
 		buffs:SetPoint("BOTTOM", self, "TOP")
-		buffs:SetHeight(16)
+		buffs:SetHeight(17)
 		buffs:SetWidth(width)
 
-		buffs.size = 16
+		buffs.size = 17
 		buffs.num = math.floor(width / buffs.size + .5)
 
 		self.Buffs = buffs
@@ -229,11 +229,11 @@ local func = function(settings, self, unit)
 		-- Debuffs
 		local debuffs = CreateFrame("Frame", nil, self)
 		debuffs:SetPoint("TOP", self, "BOTTOM")
-		debuffs:SetHeight(16)
+		debuffs:SetHeight(20)
 		debuffs:SetWidth(width)
 
 		debuffs.initialAnchor = "TOPLEFT"
-		debuffs.size = 16
+		debuffs.size = 20
 		debuffs.num = math.floor(width / debuffs.size + .5)
 
 		self.Debuffs = debuffs
