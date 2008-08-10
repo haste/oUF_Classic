@@ -72,7 +72,7 @@ local siValue = function(val)
 	end
 end
 
-local OverrideUpdateHealth = function(self, event, bar, unit, min, max)
+local OverrideUpdateHealth = function(self, event, unit, bar, min, max)
 	local color = self.colors.health[0]
 	bar:SetStatusBarColor(color.r, color.g, color.b)
 	bar.bg:SetVertexColor(color.r * .5, color.g * .5, color.b * .5)
@@ -97,7 +97,7 @@ local OverrideUpdateHealth = function(self, event, bar, unit, min, max)
 	end
 end
 
-local PostUpdatePower = function(self, event, bar,unit, min, max)
+local PostUpdatePower = function(self, event, unit, bar, min, max)
 	if(min == 0) then
 		bar.value:SetText()
 	elseif(UnitIsDead(unit) or UnitIsGhost(unit)) then
