@@ -234,7 +234,7 @@ local func = function(settings, self, unit)
 
 		debuffs.initialAnchor = "TOPLEFT"
 		debuffs.size = 20
-		debuffs.showType = true
+		debuffs.showDebuffType = true
 		debuffs.num = math.floor(width / debuffs.size + .5)
 
 		self.Debuffs = debuffs
