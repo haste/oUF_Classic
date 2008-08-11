@@ -280,6 +280,7 @@ oUF:RegisterStyle("Classic - Small", setmetatable({
 oUF:RegisterSubTypeMapping"UNIT_LEVEL"
 oUF:SetActiveStyle"Classic"
 
+-- :Spawn(unit, frame_name, isPet) --isPet is only used on headers.
 local player = oUF:Spawn"player"
 player:SetPoint("CENTER", -200, -380)
 
