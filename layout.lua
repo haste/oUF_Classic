@@ -31,15 +31,17 @@ local classification = {
 local updateInfoString = function(self, event, unit)
 	if(unit ~= self.unit) then return end
 
+	local class, rclass = UnitClass(unit)
+	local color = RAID_CLASS_COLORS[rclass]
+	if(not class) then
+		return
+	elseif(not UnitIsPlayer(unit)) then
+		class = UnitCreatureFamily(unit) or UnitCreatureType(unit)
+	end
+
 	local level = UnitLevel(unit)
 	if(level == -1) then
 		level = '??'
-	end
-
-	local class, rclass = UnitClass(unit)
-	local color = RAID_CLASS_COLORS[rclass]
-	if(not UnitIsPlayer(unit)) then
-		class = UnitCreatureFamily(unit) or UnitCreatureType(unit)
 	end
 
 	local happiness
