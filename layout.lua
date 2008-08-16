@@ -6,7 +6,7 @@
 local texture = [[Interface\AddOns\oUF_Classic\textures\statusbar]]
 local height, width = 47, 260
 local UnitReactionColor = UnitReactionColor
-local gray = {r = .3, g = .3, b = .3}
+local gray = {.3, .3, .3}
 
 local menu = function(self)
 	local unit = self.unit:sub(1, -2)
@@ -72,16 +72,11 @@ local siValue = function(val)
 	end
 end
 
-local OverrideUpdateHealth = function(self, event, unit, bar, min, max)
-	local color = self.colors.health[0]
-	bar:SetStatusBarColor(color.r, color.g, color.b)
-	bar.bg:SetVertexColor(color.r * .5, color.g * .5, color.b * .5)
-
+local PostUpdateHealth = function(self, event, unit, bar, min, max)
 	if(UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) or not UnitIsConnected(unit)) then
 		self:SetBackdropBorderColor(.3, .3, .3)
 	else
-		color = UnitReactionColor[UnitReaction(unit, 'player')] or gray
-		self:SetBackdropBorderColor(color.r, color.g, color.b)
+		self:SetBackdropBorderColor(unpack(self.colors.reaction[UnitReaction(unit, 'player')] or gray))
 	end
 
 	if(UnitIsDead(unit)) then
@@ -138,9 +133,13 @@ local func = function(settings, self, unit)
 	hp:SetPoint("TOP", 0, -8)
 	hp:SetPoint("LEFT", 8, 0)
 
+	hp.frequentUpdates = true
+	hp.colorTapping = true
+	hp.colorHappiness = true
+	hp.colorSmooth = true
+
 	self.Health = hp
-	-- We have to override for now...
-	self.OverrideUpdateHealth = OverrideUpdateHealth
+	self.PostUpdateHealth = PostUpdateHealth
 
 	local hpp = hp:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	hpp:SetPoint("LEFT", hp, "RIGHT", 2, 0)
@@ -177,6 +176,9 @@ local func = function(settings, self, unit)
 		pp:SetParent(self)
 		pp:SetPoint("BOTTOM", 0, 8)
 		pp:SetPoint("LEFT", 8, 0)
+
+		pp.colorType = true
+		pp.frequentUpdates = true
 
 		self.Power = pp
 
