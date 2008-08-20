@@ -155,6 +155,7 @@ local func = function(settings, self, unit)
 	-- Health bar background
 	local hpbg = hp:CreateTexture(nil, "BORDER")
 	hpbg:SetAllPoints(hp)
+	hpbg:SetAlpha(.5)
 	hpbg:SetTexture(texture)
 	hp.bg = hpbg
 
@@ -179,7 +180,7 @@ local func = function(settings, self, unit)
 		pp:SetPoint("BOTTOM", 0, 8)
 		pp:SetPoint("LEFT", 8, 0)
 
-		pp.colorType = true
+		pp.colorPower = true
 		pp.frequentUpdates = true
 
 		self.Power = pp
@@ -187,6 +188,7 @@ local func = function(settings, self, unit)
 		-- Power bar background
 		local ppbg = pp:CreateTexture(nil, "BORDER")
 		ppbg:SetAllPoints(pp)
+		ppbg:SetAlpha(.5)
 		ppbg:SetTexture(texture)
 		pp.bg = ppbg
 
