@@ -136,6 +136,7 @@ local func = function(settings, self, unit)
 	hp:SetPoint("LEFT", 8, 0)
 
 	hp.frequentUpdates = true
+	hp.colorDisconnected = true
 	hp.colorTapping = true
 	hp.colorHappiness = true
 	hp.colorSmooth = true
