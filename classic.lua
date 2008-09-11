@@ -5,8 +5,17 @@
 
 local texture = [[Interface\AddOns\oUF_Classic\textures\statusbar]]
 local height, width = 47, 260
-local UnitReactionColor = UnitReactionColor
 local gray = {.3, .3, .3}
+
+local colors = setmetatable({
+	health = {.45, .73, .27},
+	power = setmetatable({
+		['MANA'] = {.27, .53, .73},
+		['RAGE'] = {.73, .27, .27},
+	}, {__index = oUF.colors.power}),
+}, {__index = oUF.colors})
+colors.power[0] = colors.power.MANA
+colors.power[1] = colors.power.RAGE
 
 local menu = function(self)
 	local unit = self.unit:sub(1, -2)
@@ -32,7 +41,7 @@ local updateInfoString = function(self, event, unit)
 	if(unit ~= self.unit) then return end
 
 	local class, rclass = UnitClass(unit)
-	local color = RAID_CLASS_COLORS[rclass]
+	local color = self.colors.class[rclass]
 	if(not class) then
 		return
 	elseif(not UnitIsPlayer(unit)) then
@@ -60,7 +69,7 @@ local updateInfoString = function(self, event, unit)
 		"L%s%s |cff%02x%02x%02x%s|r %s",
 		level,
 		classification[UnitClassification(unit)],
-		color.r * 255, color.g * 255, color.b * 255,
+		color[1] * 255, color[2] * 255, color[3] * 255,
 		class,
 		happiness or ''
 	)
@@ -78,7 +87,8 @@ local PostUpdateHealth = function(self, event, unit, bar, min, max)
 	if(UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) or not UnitIsConnected(unit)) then
 		self:SetBackdropBorderColor(.3, .3, .3)
 	else
-		self:SetBackdropBorderColor(unpack(self.colors.reaction[UnitReaction(unit, 'player')] or gray))
+		local reaction = self.colors.reaction[UnitReaction(unit, 'player')] or gray
+		self:SetBackdropBorderColor(reaction[1], reaction[2], reaction[3])
 	end
 
 	if(UnitIsDead(unit)) then
@@ -159,6 +169,16 @@ local func = function(settings, self, unit)
 	hpbg:SetAlpha(.5)
 	hpbg:SetTexture(texture)
 	hp.bg = hpbg
+
+	if(unit ~= 'targettarget') then
+		local cb = CreateFrame"StatusBar"
+		cb:SetStatusBarTexture(texture)
+		cb:SetStatusBarColor(.73, 0, .27, .8)
+		cb:SetParent(self)
+		cb:SetAllPoints(hp)
+		cb:SetToplevel(true)
+		self.Castbar = cb
+	end
 
 	-- Unit name
 	local name = hp:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -251,8 +271,8 @@ local func = function(settings, self, unit)
 			if(IsResting()) then
 				self:SetBackdropBorderColor(.3, .3, .8)
 			else
-				local color = UnitReactionColor[UnitReaction(unit, 'player')]
-				self:SetBackdropBorderColor(color.r, color.g, color.b)
+				local color = self.colors.reaction[UnitReaction(unit, 'player')]
+				self:SetBackdropBorderColor(color[1], color[2], color[3])
 			end
 		end
 	end
@@ -263,6 +283,9 @@ local func = function(settings, self, unit)
 	leader:SetPoint("BOTTOM", self, "TOP", 0, -5)
 	leader:SetTexture[[Interface\GroupFrame\UI-Group-LeaderIcon]]
 	self.Leader = leader
+
+	-- enable our colors
+	self.colors = colors
 
 	-- Range fading on party
 	if(not unit) then

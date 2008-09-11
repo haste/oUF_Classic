@@ -1,8 +1,8 @@
 ## Interface: 20400
 ## Title: oUF_Classic
 ## Author: Haste
-## Version: 1.2
+## Version: 1.3
 ## X-eMail: troeks@gmail.com
 ## Dependencies: oUF
 ## Notes: oUF layout
-layout.lua
+classic.lua
