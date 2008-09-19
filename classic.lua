@@ -17,6 +17,8 @@ local colors = setmetatable({
 colors.power[0] = colors.power.MANA
 colors.power[1] = colors.power.RAGE
 
+local wotlk = select(4, GetBuildInfo()) >= 3e4
+
 local menu = function(self)
 	local unit = self.unit:sub(1, -2)
 	local cunit = self.unit:gsub("(.)", string.upper, 1)
@@ -87,8 +89,13 @@ local PostUpdateHealth = function(self, event, unit, bar, min, max)
 	if(UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) or not UnitIsConnected(unit)) then
 		self:SetBackdropBorderColor(.3, .3, .3)
 	else
-		local reaction = self.colors.reaction[UnitReaction(unit, 'player')] or gray
-		self:SetBackdropBorderColor(reaction[1], reaction[2], reaction[3])
+		if(not wotlk) then
+			local t = self.colors.reaction[UnitReaction(unit, "player")] or gray
+			self:SetBackdropBorderColor(t[1], t[2], t[3])
+		elseif(unit ~= 'player') then
+			local r, g, b = UnitSelectionColor(unit)
+			self:SetBackdropBorderColor(r, g, b)
+		end
 	end
 
 	if(UnitIsDead(unit)) then
@@ -271,8 +278,13 @@ local func = function(settings, self, unit)
 			if(IsResting()) then
 				self:SetBackdropBorderColor(.3, .3, .8)
 			else
-				local color = self.colors.reaction[UnitReaction(unit, 'player')]
-				self:SetBackdropBorderColor(color[1], color[2], color[3])
+				if(not wotlk) then
+					local t = self.colors.reaction[UnitReaction(unit, "player")] or gray
+					self:SetBackdropBorderColor(t[1], t[2], t[3])
+				elseif(unit ~= 'player') then
+					local r, g, b = UnitSelectionColor(unit)
+					self:SetBackdropBorderColor(r, g, b)
+				end
 			end
 		end
 	end
