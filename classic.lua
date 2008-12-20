@@ -17,8 +17,6 @@ local colors = setmetatable({
 colors.power[0] = colors.power.MANA
 colors.power[1] = colors.power.RAGE
 
-local wotlk = select(4, GetBuildInfo()) >= 3e4
-
 local menu = function(self)
 	local unit = self.unit:sub(1, -2)
 	local cunit = self.unit:gsub("(.)", string.upper, 1)
@@ -30,51 +28,22 @@ local menu = function(self)
 	end
 end
 
-local classification = {
-	worldboss = 'B',
-	rareelite = 'R',
-	elite = '+',
-	rare = 'r',
-	normal = '',
-	trivial = 't',
-}
-
-local updateInfoString = function(self, event, unit)
-	if(unit ~= self.unit) then return end
-
-	local class, rclass = UnitClass(unit)
-	local color = self.colors.class[rclass]
-	if(not class) then
-		return
-	elseif(not UnitIsPlayer(unit)) then
-		class = UnitCreatureFamily(unit) or UnitCreatureType(unit)
-	end
-
-	local level = UnitLevel(unit)
-	if(level == -1) then
-		level = '??'
-	end
-
-	local happiness
-	if(unit == 'pet') then
-		happiness = GetPetHappiness()
-		if(happiness == 1) then
-			happiness = ":<"
-		elseif(happiness == 2) then
-			happiness = ":|"
-		elseif(happiness == 3) then
-			happiness = ":D"
+if(not oUF.Tags['[happiness]']) then
+	oUF.Tags['[happiness]'] = function(unit)
+		local happiness
+		if(unit == 'pet') then
+			happiness = GetPetHappiness()
+			if(happiness == 1) then
+				happiness = ":<"
+			elseif(happiness == 2) then
+				happiness = ":|"
+			elseif(happiness == 3) then
+				happiness = ":D"
+			end
 		end
-	end
 
-	self.Info:SetFormattedText(
-		"L%s%s |cff%02x%02x%02x%s|r %s",
-		level,
-		classification[UnitClassification(unit)],
-		color[1] * 255, color[2] * 255, color[3] * 255,
-		class,
-		happiness or ''
-	)
+		return happiness or ''
+	end
 end
 
 local siValue = function(val)
@@ -89,13 +58,8 @@ local PostUpdateHealth = function(self, event, unit, bar, min, max)
 	if(UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) or not UnitIsConnected(unit)) then
 		self:SetBackdropBorderColor(.3, .3, .3)
 	else
-		if(not wotlk) then
-			local t = self.colors.reaction[UnitReaction(unit, "player")] or gray
-			self:SetBackdropBorderColor(t[1], t[2], t[3])
-		elseif(unit ~= 'player') then
-			local r, g, b = UnitSelectionColor(unit)
-			self:SetBackdropBorderColor(r, g, b)
-		end
+		local r, g, b = UnitSelectionColor(unit)
+		self:SetBackdropBorderColor(r, g, b)
 	end
 
 	if(UnitIsDead(unit)) then
@@ -195,6 +159,7 @@ local func = function(settings, self, unit)
 	name:SetFont(GameFontNormal:GetFont(), 11)
 	name:SetTextColor(1, 1, 1)
 
+	self:Tag(name, '[name]')
 	self.Name = name
 
 	if(settings.size ~= 'small') then
@@ -238,14 +203,8 @@ local func = function(settings, self, unit)
 		info:SetFont(GameFontNormal:GetFont(), 11)
 		info:SetTextColor(1, 1, 1)
 
+		self:Tag(info, 'L[level][shortclassification] [raidcolor][smartclass]')
 		self.Info = info
-		self.UNIT_LEVEL = updateInfoString
-		self:RegisterEvent"UNIT_LEVEL"
-
-		if(unit == "pet") then
-			self.UNIT_HAPPINESS = updateInfoString
-			self:RegisterEvent"UNIT_HAPPINESS"
-		end
 	end
 
 	if(unit ~= 'player') then
@@ -273,20 +232,14 @@ local func = function(settings, self, unit)
 
 		self.Debuffs = debuffs
 	else
-		self:RegisterEvent"PLAYER_UPDATE_RESTING"
-		self.PLAYER_UPDATE_RESTING = function(self)
+		self:RegisterEvent("PLAYER_UPDATE_RESTING", function(self)
 			if(IsResting()) then
 				self:SetBackdropBorderColor(.3, .3, .8)
 			else
-				if(not wotlk) then
-					local t = self.colors.reaction[UnitReaction(unit, "player")] or gray
-					self:SetBackdropBorderColor(t[1], t[2], t[3])
-				elseif(unit ~= 'player') then
-					local r, g, b = UnitSelectionColor(unit)
-					self:SetBackdropBorderColor(r, g, b)
-				end
+				local r, g, b = UnitSelectionColor(unit)
+				self:SetBackdropBorderColor(r, g, b)
 			end
-		end
+		end)
 	end
 
 	local leader = self:CreateTexture(nil, "OVERLAY")
@@ -318,8 +271,6 @@ oUF:RegisterStyle("Classic - Small", setmetatable({
 	["size"] = 'small',
 }, {__call = func}))
 
--- hack to get our level information updated.
-oUF:RegisterSubTypeMapping"UNIT_LEVEL"
 oUF:SetActiveStyle"Classic"
 
 -- :Spawn(unit, frame_name, isPet) --isPet is only used on headers.
