@@ -42,6 +42,8 @@ if(not oUF.Tags['[happiness]']) then
 
 		return happiness or ''
 	end
+
+	oUF.TagEvents['[happiness]'] = 'UNIT_HAPPINESS'
 end
 
 local siValue = function(val)
