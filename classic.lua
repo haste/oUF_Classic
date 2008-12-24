@@ -14,8 +14,6 @@ local colors = setmetatable({
 		['RAGE'] = {.73, .27, .27},
 	}, {__index = oUF.colors.power}),
 }, {__index = oUF.colors})
-colors.power[0] = colors.power.MANA
-colors.power[1] = colors.power.RAGE
 
 local menu = function(self)
 	local unit = self.unit:sub(1, -2)
