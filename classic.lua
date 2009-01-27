@@ -40,7 +40,7 @@ if(not oUF.Tags['[happiness]']) then
 			end
 		end
 
-		return happiness or ''
+		return happiness
 	end
 
 	oUF.TagEvents['[happiness]'] = 'UNIT_HAPPINESS'
