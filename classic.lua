@@ -3,7 +3,7 @@
   without any conditions, unless such conditions are required by law.
 ---------------------------------------------------------------------------]]
 
-local texture = [[Interface\AddOns\oUF_Classic\textures\statusbar]]
+local _TEXTURE = [[Interface\AddOns\oUF_Classic\textures\statusbar]]
 local height, width = 47, 260
 local gray = {.3, .3, .3}
 
@@ -17,7 +17,11 @@ local colors = setmetatable({
 
 local menu = function(self)
 	local unit = self.unit:sub(1, -2)
-	local cunit = self.unit:gsub("(.)", string.upper, 1)
+	local cunit = self.unit:gsub("^%l", string.upper)
+
+	if(cunit == 'Vehicle') then
+		cunit = 'Pet'
+	end
 
 	if(unit == "party" or unit == "partypet") then
 		ToggleDropDownMenu(1, nil, _G["PartyMemberFrame"..self.id.."DropDown"], "cursor", 0, 0)
@@ -26,35 +30,18 @@ local menu = function(self)
 	end
 end
 
-if(not oUF.Tags['[happiness]']) then
-	oUF.Tags['[happiness]'] = function(unit)
-		local happiness
-		if(unit == 'pet') then
-			happiness = GetPetHappiness()
-			if(happiness == 1) then
-				happiness = ":<"
-			elseif(happiness == 2) then
-				happiness = ":|"
-			elseif(happiness == 3) then
-				happiness = ":D"
-			end
-		end
-
-		return happiness
-	end
-
-	oUF.TagEvents['[happiness]'] = 'UNIT_HAPPINESS'
-end
-
 local siValue = function(val)
-	if(val >= 1e4) then
+	if(val >= 1e6) then
+		return ('%.1f'):format(val / 1e6):gsub('%.', 'm')
+	elseif(val >= 1e4) then
 		return ("%.1f"):format(val / 1e3):gsub('%.', 'k')
 	else
 		return val
 	end
 end
 
-local PostUpdateHealth = function(self, event, unit, bar, min, max)
+local PostUpdateHealth = function(health, unit, min, max)
+	local self = health:GetParent()
 	if(UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) or not UnitIsConnected(unit)) then
 		self:SetBackdropBorderColor(.3, .3, .3)
 	else
@@ -63,27 +50,27 @@ local PostUpdateHealth = function(self, event, unit, bar, min, max)
 	end
 
 	if(UnitIsDead(unit)) then
-		bar:SetValue(0)
-		bar.value:SetText"Dead"
+		health:SetValue(0)
+		health.value:SetText"Dead"
 	elseif(UnitIsGhost(unit)) then
-		bar:SetValue(0)
-		bar.value:SetText"Ghost"
+		health:SetValue(0)
+		health.value:SetText"Ghost"
 	elseif(not UnitIsConnected(unit)) then
-		bar.value:SetText"Offline"
+		health.value:SetText"Offline"
 	else
-		bar.value:SetFormattedText('%s/%s', siValue(min), siValue(max))
+		health.value:SetFormattedText('%s/%s', siValue(min), siValue(max))
 	end
 end
 
-local PostUpdatePower = function(self, event, unit, bar, min, max)
+local PostUpdatePower = function(power, unit,min, max)
 	if(min == 0) then
-		bar.value:SetText()
+		power.value:SetText()
 	elseif(UnitIsDead(unit) or UnitIsGhost(unit)) then
-		bar:SetValue(0)
+		power:SetValue(0)
 	elseif(not UnitIsConnected(unit)) then
-		bar.value:SetText()
+		power.value:SetText()
 	else
-		bar.value:SetFormattedText('%s/%s', siValue(min), siValue(max))
+		power.value:SetFormattedText('%s/%s', siValue(min), siValue(max))
 	end
 end
 
@@ -91,6 +78,11 @@ local backdrop = {
 	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", tile = true, tileSize = 16,
 	edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 16,
 	insets = {left = 4, right = 4, top = 4, bottom = 4},
+}
+
+local range = {
+	insideAlpha = 1,
+	outsideAlpha = .5,
 }
 
 local func = function(settings, self, unit)
@@ -108,9 +100,8 @@ local func = function(settings, self, unit)
 
 	-- Health bar
 	local hp = CreateFrame"StatusBar"
-	hp:SetWidth(width - 90)
-	hp:SetHeight(14)
-	hp:SetStatusBarTexture(texture)
+	hp:SetSize(width - 90, 14)
+	hp:SetStatusBarTexture(_TEXTURE)
 
 	hp:SetParent(self)
 	hp:SetPoint("TOP", 0, -8)
@@ -122,8 +113,9 @@ local func = function(settings, self, unit)
 	hp.colorHappiness = true
 	hp.colorSmooth = true
 
+	hp.PostUpdate = PostUpdateHealth
+
 	self.Health = hp
-	self.PostUpdateHealth = PostUpdateHealth
 
 	local hpp = hp:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	hpp:SetPoint("LEFT", hp, "RIGHT", 2, 0)
@@ -138,12 +130,12 @@ local func = function(settings, self, unit)
 	local hpbg = hp:CreateTexture(nil, "BORDER")
 	hpbg:SetAllPoints(hp)
 	hpbg:SetAlpha(.5)
-	hpbg:SetTexture(texture)
+	hpbg:SetTexture(_TEXTURE)
 	hp.bg = hpbg
 
 	if(unit ~= 'targettarget') then
 		local cb = CreateFrame"StatusBar"
-		cb:SetStatusBarTexture(texture)
+		cb:SetStatusBarTexture(_TEXTURE)
 		cb:SetStatusBarColor(.73, 0, .27, .8)
 		cb:SetParent(self)
 		cb:SetAllPoints(hp)
@@ -167,7 +159,7 @@ local func = function(settings, self, unit)
 		local pp = CreateFrame"StatusBar"
 		pp:SetWidth(width - 90)
 		pp:SetHeight(14)
-		pp:SetStatusBarTexture(texture)
+		pp:SetStatusBarTexture(_TEXTURE)
 
 		pp:SetParent(self)
 		pp:SetPoint("BOTTOM", 0, 8)
@@ -182,7 +174,7 @@ local func = function(settings, self, unit)
 		local ppbg = pp:CreateTexture(nil, "BORDER")
 		ppbg:SetAllPoints(pp)
 		ppbg:SetAlpha(.5)
-		ppbg:SetTexture(texture)
+		ppbg:SetTexture(_TEXTURE)
 		pp.bg = ppbg
 
 		local ppp = hp:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -193,7 +185,8 @@ local func = function(settings, self, unit)
 		ppp:SetTextColor(1, 1, 1)
 
 		pp.value = ppp
-		self.PostUpdatePower = PostUpdatePower
+
+		pp.PostUpdate = PostUpdatePower
 
 		-- Info string
 		local info = pp:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -243,20 +236,23 @@ local func = function(settings, self, unit)
 	end
 
 	local leader = self:CreateTexture(nil, "OVERLAY")
-	leader:SetHeight(16)
-	leader:SetWidth(16)
-	leader:SetPoint("BOTTOM", self, "TOP", 0, -5)
-	leader:SetTexture[[Interface\GroupFrame\UI-Group-LeaderIcon]]
+	leader:SetSize(16, 16)
+	leader:SetPoint("BOTTOM", self, "TOP", 0, -7)
 	self.Leader = leader
 
 	-- enable our colors
 	self.colors = colors
 
 	-- Range fading on party
-	if(not unit) then
-		self.Range = true
-		self.inRangeAlpha = 1
-		self.outsideRangeAlpha = .5
+	if(unit == 'party') then
+		self.Range = range
+	end
+
+	self:SetAttribute('initial-width', width)
+	if(settings.size) then
+		self:SetAttribute('initial-height', height - 16)
+	else
+		self:SetAttribute('initial-height', height)
 	end
 end
 
@@ -271,32 +267,32 @@ oUF:RegisterStyle("Classic - Small", setmetatable({
 	["size"] = 'small',
 }, {__call = func}))
 
-oUF:SetActiveStyle"Classic"
 
--- :Spawn(unit, frame_name, isPet) --isPet is only used on headers.
-local player = oUF:Spawn"player"
-player:SetPoint("CENTER", -200, -380)
+oUF:Factory(function(self)
+	self:SetActiveStyle"Classic"
 
-local pet = oUF:Spawn"pet"
-pet:SetPoint('TOP', player, 'BOTTOM', 0, -16)
+	local player = self:Spawn"player"
+	player:SetPoint("CENTER", -200, -380)
 
-local target = oUF:Spawn"target"
-target:SetPoint("CENTER", 200, -380)
+	local pet = self:Spawn"pet"
+	pet:SetPoint('TOP', player, 'BOTTOM', 0, -16)
 
-local party = oUF:Spawn("header", "oUF_Party")
-party:SetPoint("TOPLEFT", 30, -30)
-party:SetManyAttributes(
-	"showParty", true,
-	"yOffset", -40,
-	"xOffset", -40,
-	'maxColumns', 2,
-	'unitsPerColumn', 2,
-	'columnAnchorPoint', 'LEFT',
-	'columnSpacing', 15
-)
-party:Show()
+	local target = self:Spawn"target"
+	target:SetPoint("CENTER", 200, -380)
 
-oUF:SetActiveStyle"Classic - Small"
+	local party = self:SpawnHeader(nil, nil, 'raid,party',
+		'showParty', true,
+		'yOffset', -40,
+		'xOffset', -40,
+		'maxColumns', 2,
+		'unitsPerColumn', 2,
+		'columnAnchorPoint', 'LEFT',
+		'columnSpacing', 15
+	)
+	party:SetPoint("TOPLEFT", 30, -30)
 
-local tot = oUF:Spawn"targettarget"
-tot:SetPoint("CENTER", 0, -250)
+	self:SetActiveStyle"Classic - Small"
+
+	local tot = self:Spawn"targettarget"
+	tot:SetPoint("CENTER", 0, -250)
+end)
