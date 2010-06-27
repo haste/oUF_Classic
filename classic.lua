@@ -39,6 +39,20 @@ local siValue = function(val)
 	end
 end
 
+oUF.Tags['classic:health'] = function(unit)
+	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
+	return siValue(UnitHealth(unit)) .. '/' .. siValue(UnitHealthMax(unit))
+end
+oUF.TagEvents['classic:health'] = oUF.TagEvents.missinghp
+
+oUF.Tags['classic:power'] = function(unit)
+	local min, max = UnitPower(unit), UnitPowerMax(unit)
+	if(min == 0 or max == 0 or not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
+
+	return siValue(min) .. '/' .. siValue(max)
+end
+oUF.TagEvents['classic:power'] = oUF.TagEvents.missingpp
+
 local PostUpdateHealth = function(health, unit, min, max)
 	local self = health:GetParent()
 	if(UnitIsTapped(unit) and not UnitIsTappedByPlayer(unit) or not UnitIsConnected(unit)) then
@@ -50,26 +64,14 @@ local PostUpdateHealth = function(health, unit, min, max)
 
 	if(UnitIsDead(unit)) then
 		health:SetValue(0)
-		health.value:SetText"Dead"
 	elseif(UnitIsGhost(unit)) then
 		health:SetValue(0)
-		health.value:SetText"Ghost"
-	elseif(not UnitIsConnected(unit)) then
-		health.value:SetText"Offline"
-	else
-		health.value:SetFormattedText('%s/%s', siValue(min), siValue(max))
 	end
 end
 
 local PostUpdatePower = function(power, unit,min, max)
-	if(min == 0) then
-		power.value:SetText()
-	elseif(UnitIsDead(unit) or UnitIsGhost(unit)) then
+	if(UnitIsDead(unit) or UnitIsGhost(unit)) then
 		power:SetValue(0)
-	elseif(not UnitIsConnected(unit)) then
-		power.value:SetText()
-	else
-		power.value:SetFormattedText('%s/%s', siValue(min), siValue(max))
 	end
 end
 
@@ -118,6 +120,8 @@ local Shared = function(self, unit)
 	HealthPoints:SetFont(GameFontNormal:GetFont(), 10)
 	HealthPoints:SetTextColor(1, 1, 1)
 
+	self:Tag(HealthPoints, '[dead][offline][classic:health]')
+
 	Health.value = HealthPoints
 
 	-- Health bar background
@@ -154,7 +158,7 @@ local Shared = function(self, unit)
 	self.colors = colors
 
 	self:SetAttribute('initial-width', 260)
-	self:SetAttribute('initial-height', 46)
+	self:SetAttribute('initial-height', 48)
 end
 
 local DoAuras = function(self)
@@ -214,6 +218,8 @@ local DoPower = function(self)
 	PowerPoints:SetFont(GameFontNormal:GetFont(), 10)
 	PowerPoints:SetTextColor(1, 1, 1)
 
+	self:Tag(PowerPoints, '[classic:power]')
+
 	Power.value = PowerPoints
 
 	Power.PostUpdate = PostUpdatePower
@@ -243,7 +249,7 @@ local UnitSpecific = {
 
 		DoAuras(self)
 
-		self:SetAttribute('initial-height', 30)
+		self:SetAttribute('initial-height', 32)
 	end,
 }
 
