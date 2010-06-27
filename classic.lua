@@ -4,7 +4,6 @@
 ---------------------------------------------------------------------------]]
 
 local _TEXTURE = [[Interface\AddOns\oUF_Classic\textures\statusbar]]
-local gray = {.3, .3, .3}
 
 local colors = setmetatable({
 	health = {.45, .73, .27},
