@@ -166,7 +166,7 @@ local DoAuras = function(self)
 	Buffs:SetHeight(17)
 
 	Buffs.size = 17
-	Buffs.num = math.floor(Buffs:GetWidth() / Buffs.size + .5)
+	Buffs.num = math.floor(self:GetAttribute'initial-width' / Buffs.size + .5)
 
 	self.Buffs = Buffs
 
@@ -180,7 +180,7 @@ local DoAuras = function(self)
 	Debuffs.initialAnchor = "TOPLEFT"
 	Debuffs.size = 20
 	Debuffs.showDebuffType = true
-	Debuffs.num = math.floor(Debuffs:GetWidth() / Debuffs.size + .5)
+	Debuffs.num = math.floor(self:GetAttribute'initial-width' / Debuffs.size + .5)
 
 	self.Debuffs = Debuffs
 end
