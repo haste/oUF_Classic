@@ -4,7 +4,6 @@
 ---------------------------------------------------------------------------]]
 
 local _TEXTURE = [[Interface\AddOns\oUF_Classic\textures\statusbar]]
-local height, width = 47, 260
 local gray = {.3, .3, .3}
 
 local colors = setmetatable({
@@ -80,12 +79,7 @@ local backdrop = {
 	insets = {left = 4, right = 4, top = 4, bottom = 4},
 }
 
-local range = {
-	insideAlpha = 1,
-	outsideAlpha = .5,
-}
-
-local func = function(settings, self, unit)
+local Shared = function(self, unit)
 	self.menu = menu
 
 	self:SetScript("OnEnter", UnitFrame_OnEnter)
@@ -99,187 +93,223 @@ local func = function(settings, self, unit)
 	self:SetBackdropBorderColor(.3, .3, .3, 1)
 
 	-- Health bar
-	local hp = CreateFrame"StatusBar"
-	hp:SetSize(width - 90, 14)
-	hp:SetStatusBarTexture(_TEXTURE)
+	local Health = CreateFrame("StatusBar", nil, self)
+	Health:SetHeight(14)
+	Health:SetStatusBarTexture(_TEXTURE)
 
-	hp:SetParent(self)
-	hp:SetPoint("TOP", 0, -8)
-	hp:SetPoint("LEFT", 8, 0)
+	Health:SetPoint("TOP", 0, -8)
+	Health:SetPoint("LEFT", 8, 0)
+	Health:SetPoint('RIGHT', -90, 0)
 
-	hp.frequentUpdates = true
-	hp.colorDisconnected = true
-	hp.colorTapping = true
-	hp.colorHappiness = true
-	hp.colorSmooth = true
+	Health.frequentUpdates = true
+	Health.colorDisconnected = true
+	Health.colorTapping = true
+	Health.colorHappiness = true
+	Health.colorSmooth = true
 
-	hp.PostUpdate = PostUpdateHealth
+	Health.PostUpdate = PostUpdateHealth
 
-	self.Health = hp
+	self.Health = Health
 
-	local hpp = hp:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	hpp:SetPoint("LEFT", hp, "RIGHT", 2, 0)
-	hpp:SetPoint("RIGHT", self, -6, 0)
-	hpp:SetJustifyH"CENTER"
-	hpp:SetFont(GameFontNormal:GetFont(), 10)
-	hpp:SetTextColor(1, 1, 1)
+	local HealthPoints = Health:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	HealthPoints:SetPoint("LEFT", Health, "RIGHT", 2, -1)
+	HealthPoints:SetPoint("RIGHT", self, -6, -1)
+	HealthPoints:SetJustifyH"CENTER"
+	HealthPoints:SetFont(GameFontNormal:GetFont(), 10)
+	HealthPoints:SetTextColor(1, 1, 1)
 
-	hp.value = hpp
+	Health.value = HealthPoints
 
 	-- Health bar background
-	local hpbg = hp:CreateTexture(nil, "BORDER")
-	hpbg:SetAllPoints(hp)
-	hpbg:SetAlpha(.5)
-	hpbg:SetTexture(_TEXTURE)
-	hp.bg = hpbg
+	local HealthBackground = Health:CreateTexture(nil, "BORDER")
+	HealthBackground:SetAllPoints(Health)
+	HealthBackground:SetAlpha(.5)
+	HealthBackground:SetTexture(_TEXTURE)
+	Health.bg = HealthBackground
 
-	if(unit ~= 'targettarget') then
-		local cb = CreateFrame"StatusBar"
-		cb:SetStatusBarTexture(_TEXTURE)
-		cb:SetStatusBarColor(.73, 0, .27, .8)
-		cb:SetParent(self)
-		cb:SetAllPoints(hp)
-		cb:SetToplevel(true)
-		self.Castbar = cb
-	end
+	local Castbar = CreateFrame("StatusBar", nil, self)
+	Castbar:SetStatusBarTexture(_TEXTURE)
+	Castbar:SetStatusBarColor(.73, 0, .27, .8)
+	Castbar:SetAllPoints(Health)
+	Castbar:SetToplevel(true)
+	self.Castbar = Castbar
 
 	-- Unit name
-	local name = hp:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	name:SetPoint("LEFT", 2, -1)
-	name:SetPoint("RIGHT", -2, 0)
-	name:SetJustifyH"LEFT"
-	name:SetFont(GameFontNormal:GetFont(), 11)
-	name:SetTextColor(1, 1, 1)
+	local Name = Health:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	Name:SetPoint("LEFT", 2, -1)
+	Name:SetPoint("RIGHT", -2, -1)
+	Name:SetJustifyH"LEFT"
+	Name:SetFont(GameFontNormal:GetFont(), 11)
+	Name:SetTextColor(1, 1, 1)
 
-	self:Tag(name, '[name]')
-	self.Name = name
+	self:Tag(Name, '[name]')
+	self.Name = Name
 
-	if(settings.size ~= 'small') then
-		-- Power bar
-		local pp = CreateFrame"StatusBar"
-		pp:SetWidth(width - 90)
-		pp:SetHeight(14)
-		pp:SetStatusBarTexture(_TEXTURE)
-
-		pp:SetParent(self)
-		pp:SetPoint("BOTTOM", 0, 8)
-		pp:SetPoint("LEFT", 8, 0)
-
-		pp.colorPower = true
-		pp.frequentUpdates = true
-
-		self.Power = pp
-
-		-- Power bar background
-		local ppbg = pp:CreateTexture(nil, "BORDER")
-		ppbg:SetAllPoints(pp)
-		ppbg:SetAlpha(.5)
-		ppbg:SetTexture(_TEXTURE)
-		pp.bg = ppbg
-
-		local ppp = hp:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-		ppp:SetPoint("LEFT", pp, "RIGHT", 2, 0)
-		ppp:SetPoint("RIGHT", self, -6, 0)
-		ppp:SetJustifyH"CENTER"
-		ppp:SetFont(GameFontNormal:GetFont(), 10)
-		ppp:SetTextColor(1, 1, 1)
-
-		pp.value = ppp
-
-		pp.PostUpdate = PostUpdatePower
-
-		-- Info string
-		local info = pp:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-		info:SetPoint("LEFT", 2, -1)
-		info:SetPoint("RIGHT", -2, 0)
-		info:SetJustifyH"LEFT"
-		info:SetFont(GameFontNormal:GetFont(), 11)
-		info:SetTextColor(1, 1, 1)
-
-		self:Tag(info, 'L[level][shortclassification] [raidcolor][smartclass]')
-		self.Info = info
-	end
-
-	if(unit ~= 'player') then
-		-- Buffs
-		local buffs = CreateFrame("Frame", nil, self)
-		buffs:SetPoint("BOTTOM", self, "TOP")
-		buffs:SetHeight(17)
-		buffs:SetWidth(width)
-
-		buffs.size = 17
-		buffs.num = math.floor(width / buffs.size + .5)
-
-		self.Buffs = buffs
-
-		-- Debuffs
-		local debuffs = CreateFrame("Frame", nil, self)
-		debuffs:SetPoint("TOP", self, "BOTTOM")
-		debuffs:SetHeight(20)
-		debuffs:SetWidth(width)
-
-		debuffs.initialAnchor = "TOPLEFT"
-		debuffs.size = 20
-		debuffs.showDebuffType = true
-		debuffs.num = math.floor(width / debuffs.size + .5)
-
-		self.Debuffs = debuffs
-	else
-		self:RegisterEvent("PLAYER_UPDATE_RESTING", function(self)
-			if(IsResting()) then
-				self:SetBackdropBorderColor(.3, .3, .8)
-			else
-				local r, g, b = UnitSelectionColor(unit)
-				self:SetBackdropBorderColor(r, g, b)
-			end
-		end)
-	end
-
-	local leader = self:CreateTexture(nil, "OVERLAY")
-	leader:SetSize(16, 16)
-	leader:SetPoint("BOTTOM", self, "TOP", 0, -7)
-	self.Leader = leader
+	local Leader = self:CreateTexture(nil, "OVERLAY")
+	Leader:SetSize(16, 16)
+	Leader:SetPoint("BOTTOM", self, "TOP", 0, -7)
+	self.Leader = Leader
 
 	-- enable our colors
 	self.colors = colors
 
-	-- Range fading on party
-	if(unit == 'party') then
-		self.Range = range
+	self:SetAttribute('initial-width', 260)
+	self:SetAttribute('initial-height', 46)
+end
+
+local DoAuras = function(self)
+	-- Buffs
+	local Buffs = CreateFrame("Frame", nil, self)
+	Buffs:SetPoint("BOTTOM", self, "TOP")
+	Buffs:SetPoint'LEFT'
+	Buffs:SetPoint'RIGHT'
+	Buffs:SetHeight(17)
+
+	Buffs.size = 17
+	Buffs.num = math.floor(Buffs:GetWidth() / Buffs.size + .5)
+
+	self.Buffs = Buffs
+
+	-- Debuffs
+	local Debuffs = CreateFrame("Frame", nil, self)
+	Debuffs:SetPoint("TOP", self, "BOTTOM")
+	Debuffs:SetPoint'LEFT'
+	Debuffs:SetPoint'RIGHT'
+	Debuffs:SetHeight(20)
+
+	Debuffs.initialAnchor = "TOPLEFT"
+	Debuffs.size = 20
+	Debuffs.showDebuffType = true
+	Debuffs.num = math.floor(Debuffs:GetWidth() / Debuffs.size + .5)
+
+	self.Debuffs = Debuffs
+end
+
+local DoPower = function(self)
+	-- Power bar
+	local Power = CreateFrame("StatusBar", nil, self)
+	Power:SetHeight(14)
+	Power:SetStatusBarTexture(_TEXTURE)
+
+	Power:SetPoint("BOTTOM", 0, 8)
+	Power:SetPoint("LEFT", 8, 0)
+	Power:SetPoint('RIGHT', -90, 0)
+
+	Power.colorPower = true
+	Power.frequentUpdates = true
+
+	self.Power = Power
+
+	-- Power bar background
+	local PowerBackground = Power:CreateTexture(nil, "BORDER")
+	PowerBackground:SetAllPoints(Power)
+	PowerBackground:SetAlpha(.5)
+	PowerBackground:SetTexture(_TEXTURE)
+	Power.bg = PowerBackground
+
+	local PowerPoints = Power:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	PowerPoints:SetPoint("LEFT", Power, "RIGHT", 2, -1)
+	PowerPoints:SetPoint("RIGHT", self, -6, -1)
+	PowerPoints:SetJustifyH"CENTER"
+	PowerPoints:SetFont(GameFontNormal:GetFont(), 10)
+	PowerPoints:SetTextColor(1, 1, 1)
+
+	Power.value = PowerPoints
+
+	Power.PostUpdate = PostUpdatePower
+
+	-- Info string
+	local Info = Power:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	Info:SetPoint("LEFT", 2, -1)
+	Info:SetPoint("RIGHT", -2, -1)
+	Info:SetJustifyH"LEFT"
+	Info:SetFont(GameFontNormal:GetFont(), 11)
+	Info:SetTextColor(1, 1, 1)
+
+	self:Tag(Info, 'L[level][shortclassification] [raidcolor][smartclass]')
+	self.Info = Info
+end
+
+local UnitSpecific = {
+	target = function(self)
+		Shared(self)
+
+		DoAuras(self)
+		DoPower(self)
+	end,
+
+	targettarget = function(self)
+		Shared(self)
+
+		DoAuras(self)
+
+		self:SetAttribute('initial-height', 30)
+	end,
+}
+
+do
+	local PLAYER_UPDATE_RESTING = function(self)
+		if(IsResting()) then
+			self:SetBackdropBorderColor(.3, .3, .8)
+		else
+			local r, g, b = UnitSelectionColor(self.unit)
+			self:SetBackdropBorderColor(r, g, b)
+		end
 	end
 
-	self:SetAttribute('initial-width', width)
-	if(settings.size) then
-		self:SetAttribute('initial-height', height - 16)
-	else
-		self:SetAttribute('initial-height', height)
+	UnitSpecific.player = function(self)
+		Shared(self)
+
+		DoPower(self)
+
+		self:RegisterEvent("PLAYER_UPDATE_RESTING", PLAYER_UPDATE_RESTING)
 	end
 end
 
-oUF:RegisterStyle("Classic", setmetatable({
-	["initial-width"] = width,
-	["initial-height"] = height,
-}, {__call = func}))
+do
+	local range = {
+		insideAlpha = 1,
+		outsideAlpha = .5,
+	}
 
-oUF:RegisterStyle("Classic - Small", setmetatable({
-	["initial-width"] = width,
-	["initial-height"] = height - 16,
-	["size"] = 'small',
-}, {__call = func}))
+	UnitSpecific.party = function(self)
+		Shared(self)
 
+		DoAuras(self)
+		DoPower(self)
+
+		self.Range = range
+	end
+end
+
+oUF:RegisterStyle("Classic", Shared)
+for unit,layout in next, UnitSpecific do
+	-- Capitalize the unit name, so it looks better.
+	oUF:RegisterStyle('Classic - ' .. unit:gsub("^%l", string.upper), layout)
+end
+
+-- A small helper to change the style into a unit specific, if it exists.
+local spawnHelper = function(self, unit, ...)
+	if(UnitSpecific[unit]) then
+		self:SetActiveStyle('Classic - ' .. unit:gsub("^%l", string.upper))
+		local object = self:Spawn(unit)
+		object:SetPoint(...)
+		return object
+	else
+		self:SetActiveStyle'Classic'
+		local object = self:Spawn(unit)
+		object:SetPoint(...)
+		return object
+	end
+end
 
 oUF:Factory(function(self)
-	self:SetActiveStyle"Classic"
+	local player = spawnHelper(self, 'player', "CENTER", -200, -380)
+	spawnHelper(self, 'pet', 'TOP', player, 'BOTTOM', 0, -16)
+	spawnHelper(self, 'target', "CENTER", 200, -380)
+	spawnHelper(self, 'targettarget', "CENTER", 0, -250)
 
-	local player = self:Spawn"player"
-	player:SetPoint("CENTER", -200, -380)
-
-	local pet = self:Spawn"pet"
-	pet:SetPoint('TOP', player, 'BOTTOM', 0, -16)
-
-	local target = self:Spawn"target"
-	target:SetPoint("CENTER", 200, -380)
-
+	self:SetActiveStyle'Classic - Party'
 	local party = self:SpawnHeader(nil, nil, 'raid,party',
 		'showParty', true,
 		'yOffset', -40,
@@ -290,9 +320,4 @@ oUF:Factory(function(self)
 		'columnSpacing', 15
 	)
 	party:SetPoint("TOPLEFT", 30, -30)
-
-	self:SetActiveStyle"Classic - Small"
-
-	local tot = self:Spawn"targettarget"
-	tot:SetPoint("CENTER", 0, -250)
 end)
