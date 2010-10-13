@@ -80,14 +80,15 @@ local backdrop = {
 	insets = {left = 4, right = 4, top = 4, bottom = 4},
 }
 
-local Shared = function(self, unit)
+local Shared = function(self, unit, isSingle)
 	self.menu = menu
 
 	self:SetScript("OnEnter", UnitFrame_OnEnter)
 	self:SetScript("OnLeave", UnitFrame_OnLeave)
 
-	self:RegisterForClicks"anyup"
-	self:SetAttribute("*type2", "menu")
+	-- XXX: Change to AnyUp when RegisterAttributeDriver doesn't cause clicks
+	-- to get incorrectly eaten.
+	self:RegisterForClicks"AnyDown"
 
 	self:SetBackdrop(backdrop)
 	self:SetBackdropColor(0, 0, 0, 1)
@@ -156,8 +157,9 @@ local Shared = function(self, unit)
 	-- enable our colors
 	self.colors = colors
 
-	self:SetAttribute('initial-width', 260)
-	self:SetAttribute('initial-height', 48)
+	if(isSingle) then
+		self:SetSize(260, 48)
+	end
 end
 
 local DoAuras = function(self)
@@ -169,7 +171,7 @@ local DoAuras = function(self)
 	Buffs:SetHeight(17)
 
 	Buffs.size = 17
-	Buffs.num = math.floor(self:GetAttribute'initial-width' / Buffs.size + .5)
+	Buffs.num = math.floor(self:GetWidth() / Buffs.size + .5)
 
 	self.Buffs = Buffs
 
@@ -183,7 +185,7 @@ local DoAuras = function(self)
 	Debuffs.initialAnchor = "TOPLEFT"
 	Debuffs.size = 20
 	Debuffs.showDebuffType = true
-	Debuffs.num = math.floor(self:GetAttribute'initial-width' / Debuffs.size + .5)
+	Debuffs.num = math.floor(self:GetWidth() / Debuffs.size + .5)
 
 	self.Debuffs = Debuffs
 end
@@ -236,19 +238,21 @@ local DoPower = function(self)
 end
 
 local UnitSpecific = {
-	target = function(self)
-		Shared(self)
+	target = function(self, ...)
+		Shared(self, ...)
 
 		DoAuras(self)
 		DoPower(self)
 	end,
 
-	targettarget = function(self)
-		Shared(self)
+	targettarget = function(self, unit, isSingle)
+		Shared(self, unit, isSingle)
 
 		DoAuras(self)
 
-		self:SetAttribute('initial-height', 32)
+		if(isSingle) then
+			self:SetHeight(32)
+		end
 	end,
 }
 
@@ -262,8 +266,8 @@ do
 		end
 	end
 
-	UnitSpecific.player = function(self)
-		Shared(self)
+	UnitSpecific.player = function(self, ...)
+		Shared(self, ...)
 
 		DoPower(self)
 
@@ -277,8 +281,8 @@ do
 		outsideAlpha = .5,
 	}
 
-	UnitSpecific.party = function(self)
-		Shared(self)
+	UnitSpecific.party = function(self, ...)
+		Shared(self, ...)
 
 		DoAuras(self)
 		DoPower(self)
@@ -322,7 +326,12 @@ oUF:Factory(function(self)
 		'maxColumns', 2,
 		'unitsPerColumn', 2,
 		'columnAnchorPoint', 'LEFT',
-		'columnSpacing', 15
+		'columnSpacing', 15,
+
+		'oUF-initialConfigFunction', [[
+			self:SetWidth(260)
+			self:SetHeight(48)
+		]]
 	)
 	party:SetPoint("TOPLEFT", 30, -30)
 end)
