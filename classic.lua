@@ -106,7 +106,6 @@ local Shared = function(self, unit, isSingle)
 	Health.frequentUpdates = true
 	Health.colorDisconnected = true
 	Health.colorTapping = true
-	Health.colorHappiness = true
 	Health.colorSmooth = true
 
 	Health.PostUpdate = PostUpdateHealth
