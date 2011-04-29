@@ -298,15 +298,13 @@ end
 local spawnHelper = function(self, unit, ...)
 	if(UnitSpecific[unit]) then
 		self:SetActiveStyle('Classic - ' .. unit:gsub("^%l", string.upper))
-		local object = self:Spawn(unit)
-		object:SetPoint(...)
-		return object
 	else
 		self:SetActiveStyle'Classic'
-		local object = self:Spawn(unit)
-		object:SetPoint(...)
-		return object
 	end
+
+	local object = self:Spawn(unit)
+	object:SetPoint(...)
+	return object
 end
 
 oUF:Factory(function(self)
