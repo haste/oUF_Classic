@@ -86,9 +86,7 @@ local Shared = function(self, unit, isSingle)
 	self:SetScript("OnEnter", UnitFrame_OnEnter)
 	self:SetScript("OnLeave", UnitFrame_OnLeave)
 
-	-- XXX: Change to AnyUp when RegisterAttributeDriver doesn't cause clicks
-	-- to get incorrectly eaten.
-	self:RegisterForClicks"AnyDown"
+	self:RegisterForClicks"AnyUp"
 
 	self:SetBackdrop(backdrop)
 	self:SetBackdropColor(0, 0, 0, 1)
