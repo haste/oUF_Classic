@@ -38,19 +38,19 @@ local siValue = function(val)
 	end
 end
 
-oUF.Tags['classic:health'] = function(unit)
+oUF.Tags.Methods['classic:health'] = function(unit)
 	if(not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
 	return siValue(UnitHealth(unit)) .. '/' .. siValue(UnitHealthMax(unit))
 end
-oUF.TagEvents['classic:health'] = oUF.TagEvents.missinghp
+oUF.Tags.Events['classic:health'] = oUF.Tags.Events.missinghp
 
-oUF.Tags['classic:power'] = function(unit)
+oUF.Tags.Methods['classic:power'] = function(unit)
 	local min, max = UnitPower(unit), UnitPowerMax(unit)
 	if(min == 0 or max == 0 or not UnitIsConnected(unit) or UnitIsDead(unit) or UnitIsGhost(unit)) then return end
 
 	return siValue(min) .. '/' .. siValue(max)
 end
-oUF.TagEvents['classic:power'] = oUF.TagEvents.missingpp
+oUF.Tags.Events['classic:power'] = oUF.Tags.Events.missingpp
 
 local PostUpdateHealth = function(health, unit, min, max)
 	local self = health:GetParent()
