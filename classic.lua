@@ -13,21 +13,6 @@ local colors = setmetatable({
 	}, {__index = oUF.colors.power}),
 }, {__index = oUF.colors})
 
-local menu = function(self)
-	local unit = self.unit:sub(1, -2)
-	local cunit = self.unit:gsub("^%l", string.upper)
-
-	if(cunit == 'Vehicle') then
-		cunit = 'Pet'
-	end
-
-	if(unit == "party" or unit == "partypet") then
-		ToggleDropDownMenu(1, nil, _G["PartyMemberFrame"..self.id.."DropDown"], "cursor", 0, 0)
-	elseif(_G[cunit.."FrameDropDown"]) then
-		ToggleDropDownMenu(1, nil, _G[cunit.."FrameDropDown"], "cursor", 0, 0)
-	end
-end
-
 local siValue = function(val)
 	if(val >= 1e6) then
 		return ('%.1f'):format(val / 1e6):gsub('%.', 'm')
@@ -81,8 +66,6 @@ local backdrop = {
 }
 
 local Shared = function(self, unit, isSingle)
-	self.menu = menu
-
 	self:SetScript("OnEnter", UnitFrame_OnEnter)
 	self:SetScript("OnLeave", UnitFrame_OnLeave)
 
